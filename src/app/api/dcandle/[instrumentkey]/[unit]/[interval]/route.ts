@@ -3,10 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic"; // Force dynamic rendering for this route
 
-export async function GET(
-  request: NextRequest,
-  context: { params: { instrumentkey: string; unit: string; interval: string } }
-) {
+export async function GET(context: {
+  params: { instrumentkey: string; unit: string; interval: string };
+}) {
   try {
     const instrumentkey = decodeURIComponent(context.params.instrumentkey);
     const unit = context.params.unit;
@@ -19,16 +18,6 @@ export async function GET(
         { status: 400 }
       );
     }
-
-    //   return NextResponse.json(candleData);
-    // const accessToken = process.env.ACCESS_TOKEN;
-    // console.log("Access Token: ddddddd");
-    // if (!accessToken) {
-    //   return NextResponse.json(
-    //     { error: "Missing ACCESS_TOKEN" },
-    //     { status: 401 }
-    //   );
-    // }
 
     const toDate = new Date().toISOString().split("T")[0];
     const today = new Date(); // 2025-09-28T14:00:00.000Z
@@ -86,14 +75,12 @@ export async function GET(
       });
 
     return NextResponse.json(mergedCandles);
-  } catch (error: any) {
-    console.error(
-      "❌ Error fetching historical candles:",
-      error.response?.data || error.message
-    );
-    return NextResponse.json(
-      { error: "Failed to fetch candle data" },
-      { status: 500 }
-    );
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error("❌ Error fetching historical candles:", error.message);
+    } else {
+      console.error("Unknown API error:", error);
+    }
+    return new Response("Failed to fetch candle data", { status: 500 });
   }
 }

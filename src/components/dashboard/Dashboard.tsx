@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import {
-  RefreshCw,
   ChevronRight,
   ExternalLink,
   Newspaper,
@@ -12,29 +11,39 @@ import { stocksInNews, marketNews } from "../../data/dashboard";
 import { useRouter } from "next/navigation";
 import Watchlist from "./Watchlist";
 import { getIndexLtpData, FinalIndexData } from "./MarketIndex";
-
+import { TrendingStockItem, WeekHighLowItem } from "@/data/indiApi";
 import { getGainersData, getLosersData } from "@/data/indiApi";
+type StockDisplayItem = TrendingStockItem | WeekHighLowItem;
 
 type GainersData = {
-  TopGainers: Array<any>;
-  BSEHigh52Week: Array<any>;
-  NSEHigh52Week: Array<any>;
+  TopGainers: StockDisplayItem[];
+  BSEHigh52Week: StockDisplayItem[];
+  NSEHigh52Week: StockDisplayItem[];
 };
 type LosersData = {
-  TopLosers: Array<any>;
-  BSELow52Week: Array<any>;
-  NSELow52Week: Array<any>;
+  TopLosers: StockDisplayItem[];
+  BSELow52Week: StockDisplayItem[];
+  NSELow52Week: StockDisplayItem[];
 };
 
 function MyDashboard() {
-  const [gainersData, setGainersData] = useState<GainersData>();
-  const [losersData, setLosersData] = useState<LosersData>();
-  const [loserStatus, setLoserStatus] = useState("TopLosers");
+  const [gainersData, setGainersData] = useState<GainersData>({
+    TopGainers: [],
+    BSEHigh52Week: [],
+    NSEHigh52Week: [],
+  });
+
+  const [losersData, setLosersData] = useState<LosersData>({
+    TopLosers: [],
+    BSELow52Week: [],
+    NSELow52Week: [],
+  });
+
+  const [loserStatus, setLoserStatus] = useState<keyof LosersData>("TopLosers");
   const [gainerStatus, setGainerStatus] =
     useState<keyof GainersData>("TopGainers");
   const [indicesData, setIndicesData] = useState<FinalIndexData[]>([]);
   const [visibleIndexStart, setVisibleIndexStart] = useState(0);
-  const [refreshing, setRefreshing] = useState(false);
   const [isMobileView, setIsMobileView] = useState(false);
 
   useEffect(() => {
@@ -57,22 +66,40 @@ function MyDashboard() {
     );
   };
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    try {
-      await Promise.all([
-        getGainersData().then((data) => setGainersData(data)),
-        getLosersData().then((data) => setLosersData(data)),
-        getIndexLtpData().then((data) => setIndicesData(data)),
-      ]);
-    } finally {
-      setRefreshing(false);
-    }
-  };
-
   useEffect(() => {
-    getGainersData().then((data) => setGainersData(data));
-    getLosersData().then((data) => setLosersData(data));
+    getGainersData().then((data) =>
+      setGainersData({
+        TopGainers: data.TopGainers.map((stock) => ({
+          ...stock,
+          positive: parseFloat(stock.net_change) > 0,
+        })),
+        BSEHigh52Week: data.BSEHigh52Week.map((stock) => ({
+          ...stock,
+          positive: true,
+        })),
+        NSEHigh52Week: data.NSEHigh52Week.map((stock) => ({
+          ...stock,
+          positive: true,
+        })),
+      })
+    );
+
+    getLosersData().then((data) =>
+      setLosersData({
+        TopLosers: data.TopLosers.map((stock) => ({
+          ...stock,
+          positive: parseFloat(stock.net_change) > 0,
+        })),
+        BSELow52Week: data.BSELow52Week.map((stock) => ({
+          ...stock,
+          positive: false,
+        })),
+        NSELow52Week: data.NSELow52Week.map((stock) => ({
+          ...stock,
+          positive: false,
+        })),
+      })
+    );
     getIndexLtpData().then((data) => setIndicesData(data));
   }, []);
 
@@ -90,6 +117,78 @@ function MyDashboard() {
     { label: "52 Week Low (BSE)", key: "BSELow52Week" },
     { label: "52 Week Low (NSE)", key: "NSELow52Week" },
   ];
+
+  function isTrendingStockItem(
+    stock: StockDisplayItem
+  ): stock is TrendingStockItem {
+    return (stock as TrendingStockItem).company_name !== undefined;
+  }
+
+  const renderStockItem = (stock: StockDisplayItem) => {
+    let name: string;
+    let price: number;
+    let netChange: number;
+    let percentChange: string;
+    let positive: boolean;
+
+    if (isTrendingStockItem(stock)) {
+      // stock is TrendingStockItem
+      name = stock.company_name;
+      price = Number(stock.price);
+      netChange = parseFloat(stock.net_change);
+      percentChange = stock.percent_change;
+      positive = Number(stock.net_change) > 0 ? true : false;
+    } else {
+      // stock is WeekHighLowItem
+      name = stock.company || "Unknown";
+      price = stock.price || 0;
+      netChange = 0;
+      percentChange = "0%";
+      positive = stock["52_week_high"] !== undefined ? true : false;
+    }
+
+    return (
+      <div
+        key={name + price}
+        className="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-slate-50/50 to-purple-50/30 rounded-lg sm:rounded-xl hover:from-purple-50/50 hover:to-indigo-50/50 transition-all duration-200 cursor-pointer border border-slate-200/50 hover:border-purple-200 hover:shadow-md group"
+      >
+        <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
+          <div className="text-xl sm:text-2xl flex-shrink-0">
+            {positive ? <TrendingUp /> : <TrendingDown />}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-sm sm:text-base text-slate-900 group-hover:text-purple-700 transition-colors truncate">
+              {name}
+            </div>
+            <div className="text-base sm:text-lg font-bold text-slate-900">
+              ₹{price}
+            </div>
+          </div>
+        </div>
+        <div className="text-right flex-shrink-0 ml-2">
+          <div
+            className={`font-semibold text-sm sm:text-base flex items-center gap-1 justify-end ${
+              positive ? "text-emerald-600" : "text-red-600"
+            }`}
+          >
+            {positive ? (
+              <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" />
+            ) : (
+              <TrendingDown className="w-3 h-3 sm:w-4 sm:h-4" />
+            )}
+            {netChange}
+          </div>
+          <div
+            className={`text-xs sm:text-sm font-medium ${
+              positive ? "text-emerald-600" : "text-red-600"
+            }`}
+          >
+            ({percentChange})
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50">
@@ -209,50 +308,7 @@ function MyDashboard() {
 
               <div className="p-4 sm:p-6">
                 <div className="grid grid-cols-1 gap-3">
-                  {gainersData?.[gainerStatus]?.map((stock, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-slate-50/50 to-purple-50/30 rounded-lg sm:rounded-xl hover:from-purple-50/50 hover:to-indigo-50/50 transition-all duration-200 cursor-pointer border border-slate-200/50 hover:border-purple-200 hover:shadow-md group"
-                    >
-                      <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
-                        <div className="text-xl sm:text-2xl flex-shrink-0">
-                          {stock.icon || "📈"}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-sm sm:text-base text-slate-900 group-hover:text-purple-700 transition-colors truncate">
-                            {stock.company_name || stock.symbol}
-                          </div>
-                          <div className="text-xs sm:text-sm text-slate-600">
-                            {stock.company || stock.exchange}
-                          </div>
-                          <div className="text-base sm:text-lg font-bold text-slate-900">
-                            ₹{stock.price || stock.ltp}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right flex-shrink-0 ml-2">
-                        <div
-                          className={`font-semibold text-sm sm:text-base flex items-center gap-1 justify-end ${
-                            stock.positive ? "text-emerald-600" : "text-red-600"
-                          }`}
-                        >
-                          {stock.positive ? (
-                            <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" />
-                          ) : (
-                            <TrendingDown className="w-3 h-3 sm:w-4 sm:h-4" />
-                          )}
-                          {stock.net_change}
-                        </div>
-                        <div
-                          className={`text-xs sm:text-sm font-medium ${
-                            stock.positive ? "text-emerald-600" : "text-red-600"
-                          }`}
-                        >
-                          ({stock.percent_change})
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                  {gainersData?.[gainerStatus]?.map(renderStockItem)}
                 </div>
               </div>
             </div>
@@ -292,50 +348,7 @@ function MyDashboard() {
 
               <div className="p-4 sm:p-6">
                 <div className="grid grid-cols-1 gap-3">
-                  {losersData?.TopLosers.map((stock, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-slate-50/50 to-purple-50/30 rounded-lg sm:rounded-xl hover:from-purple-50/50 hover:to-indigo-50/50 transition-all duration-200 cursor-pointer border border-slate-200/50 hover:border-purple-200 hover:shadow-md group"
-                    >
-                      <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
-                        <div className="text-xl sm:text-2xl flex-shrink-0">
-                          {stock.icon || "📉"}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-sm sm:text-base text-slate-900 group-hover:text-purple-700 transition-colors truncate">
-                            {stock.company_name || stock.symbol}
-                          </div>
-                          <div className="text-xs sm:text-sm text-slate-600">
-                            {stock.company || stock.exchange}
-                          </div>
-                          <div className="text-base sm:text-lg font-bold text-slate-900">
-                            ₹{stock.price || stock.ltp}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right flex-shrink-0 ml-2">
-                        <div
-                          className={`font-semibold text-sm sm:text-base flex items-center gap-1 justify-end ${
-                            stock.positive ? "text-emerald-600" : "text-red-600"
-                          }`}
-                        >
-                          {stock.positive ? (
-                            <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" />
-                          ) : (
-                            <TrendingDown className="w-3 h-3 sm:w-4 sm:h-4" />
-                          )}
-                          {stock.net_change}
-                        </div>
-                        <div
-                          className={`text-xs sm:text-sm font-medium ${
-                            stock.positive ? "text-emerald-600" : "text-red-600"
-                          }`}
-                        >
-                          ({stock.percent_change})
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                  {losersData?.[loserStatus]?.map(renderStockItem)}
                 </div>
               </div>
             </div>

@@ -1,11 +1,10 @@
 "use client";
-import React, { useState, useEffect, JSX, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   CheckCircle,
   Download,
   RefreshCw,
   IndianRupee,
-  BarChart3,
   TrendingUp,
   TrendingDown,
 } from "lucide-react";
@@ -13,7 +12,6 @@ import axios from "axios";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { User } from "../../types/user";
-import { Trade } from "@/types/trade";
 import TradeTable from "./TradeTable";
 
 const MyTradesPage: React.FC = () => {

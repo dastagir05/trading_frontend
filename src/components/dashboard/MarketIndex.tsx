@@ -15,7 +15,6 @@ import {
   Wallet,
   Fuel,
   Globe,
-  Smartphone,
 } from "lucide-react";
 import { ReactNode } from "react";
 import EQ_Stock from "@/data/EQ_Stock.json";
@@ -252,9 +251,9 @@ export async function getFixWatchlist(userId: string): Promise<FinalData[]> {
     return Info;
   }
 
-  const WatchlistStocksInLtpStruncture = EQ_Stock.filter((stock: any) =>
+  const WatchlistStocksInLtpStruncture = EQ_Stock.filter((stock: Info) =>
     instruments.some((item) => item === stock.instrument_key)
-  ).map((stock: any) => ({
+  ).map((stock: Info) => ({
     name: stock.name,
     instrument_key: stock.instrument_key,
     trading_symbol: stock.trading_symbol,

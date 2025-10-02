@@ -1,10 +1,18 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import {
+  CandlestickData,
   CandlestickSeries,
+  CandlestickSeriesOptions,
+  CandlestickStyleOptions,
   createChart,
+  DeepPartial,
+  ISeriesApi,
+  SeriesOptionsCommon,
+  Time,
   UTCTimestamp,
+  WhitespaceData,
 } from "lightweight-charts";
-import { ChevronDown, TrendingUp, Clock, Search, Menu, X } from "lucide-react";
+import { ChevronDown, Menu, X } from "lucide-react";
 import SearchStockDialog from "./SearchStockDialog";
 import axios from "axios";
 import PurchaseButton from "./PurchaseButton";
@@ -20,9 +28,20 @@ type StockInfo = {
   name: string;
   trading_symbol: string;
   instrument_key: string;
-  [key: string]: any;
+  expiry?: Date | null;
+  lotSize?: number | null;
+  [key: string]: unknown;
 };
 
+export type NSE_FO_Stock = {
+  name: string;
+  trading_symbol: string;
+  exchange?: string;
+  instrument_key: string;
+  expiry: Date | number;
+  lot_size: number;
+  [key: string]: unknown;
+};
 const timeframes = [
   { label: "1m", unit: "minutes", interval: 1 },
   { label: "3m", unit: "minutes", interval: 3 },
@@ -54,13 +73,30 @@ const popularIndices = [
     instrument_key: "NSE_INDEX|Nifty Fin Service",
   },
 ];
+type Candle = [
+  timestamp: string,
+  open: number,
+  high: number,
+  low: number,
+  close: number,
+  volume: number
+];
 
 const Chart = () => {
   const chartContainerRef = useRef(null);
   const chartRef = useRef<ReturnType<typeof createChart> | null>(null);
-  const candleSeriesRef = useRef<any>(null);
+  const candleSeriesRef =
+    useRef<
+      ISeriesApi<
+        "Candlestick",
+        Time,
+        CandlestickData<Time> | WhitespaceData<Time>,
+        CandlestickSeriesOptions,
+        DeepPartial<CandlestickStyleOptions & SeriesOptionsCommon>
+      >
+    >(null);
   const [error, setError] = useState<string | null>(null);
-  const [candles, setCandles] = useState<any[]>([]);
+  const [candles, setCandles] = useState<Candle[]>([]);
   const [timeframe, setTimeframe] = useState<TimeframeLabel>("15m");
   const [stockInfo, setStockInfo] = useState<StockInfo>({
     name: "RELIANCE INDUSTRIES LTD",
@@ -88,7 +124,7 @@ const Chart = () => {
     const exchange = instrumentKeyProp.split("|")[0];
     if (exchange === "NSE_EQ") {
       const match = EQ_Stock.find(
-        (stock: any) => stock.instrument_key === instrumentKeyProp
+        (stock: StockInfo) => stock.instrument_key === instrumentKeyProp
       );
       if (match) {
         setStockInfo({
@@ -100,7 +136,7 @@ const Chart = () => {
       }
     } else if (exchange === "NSE_INDEX") {
       const match = nse_indices.find(
-        (stock: any) => stock.instrument_key === instrumentKeyProp
+        (stock: StockInfo) => stock.instrument_key === instrumentKeyProp
       );
       if (match) {
         setStockInfo({
@@ -111,8 +147,9 @@ const Chart = () => {
         });
       }
     } else if (exchange === "NSE_FO") {
-      const match = nse_fo_fut.find(
-        (stock: any) => stock.instrument_key === instrumentKeyProp
+      const nse_fo_fut_1: NSE_FO_Stock[] = nse_fo_fut;
+      const match = nse_fo_fut_1.find(
+        (stock: NSE_FO_Stock) => stock.instrument_key === instrumentKeyProp
       );
       if (match) {
         setStockInfo({
@@ -120,7 +157,7 @@ const Chart = () => {
           trading_symbol: match.trading_symbol,
           exchange: "NSE_FO",
           instrument_key: instrumentKeyProp,
-          expiry: match.expiry,
+          expiry: match.expiry ? new Date(match.expiry) : null,
           lotSize: match.lot_size,
         });
       } else if (Array.isArray(nse_fo)) {
@@ -129,8 +166,8 @@ const Chart = () => {
           trading_symbol: instrumentKeyProp,
           exchange: "NSE_FO",
           instrument_key: instrumentKeyProp,
-          expiry: expiryProp,
-          lotSize: lotSizeProp,
+          expiry: expiryProp ? new Date(expiryProp) : null,
+          lotSize: lotSizeProp ? parseInt(lotSizeProp) : null,
         });
       }
     }
@@ -138,7 +175,7 @@ const Chart = () => {
     setIsReady(true);
   }, [instrumentKeyProp]);
 
-  const formatCandleData = useCallback((rawCandles: any[]) => {
+  const formatCandleData = useCallback((rawCandles: Candle[]) => {
     return rawCandles.map((candle) => {
       const cleanTimestamp = candle[0].split(".")[0].replace("+05:30", "Z");
       return {
@@ -156,6 +193,7 @@ const Chart = () => {
   useEffect(() => {
     if (!chartContainerRef.current) {
       setError("Chart container not found");
+      console.log("Chart container not found", error);
       return;
     }
 
@@ -271,10 +309,15 @@ const Chart = () => {
           return;
         }
         setCandles(res.data);
-      } catch (err: any) {
-        if (err?.name === "CanceledError") return;
-        console.error("Error fetching candles:", err);
-        setError("Failed to fetch candle data");
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          if (err.name === "CanceledError") return;
+          console.error("Error fetching candles:", err);
+          setError("Failed to fetch candle data");
+        } else {
+          console.error("Unknown error fetching candles:", err);
+          setError("Failed to fetch candle data");
+        }
       }
     };
 

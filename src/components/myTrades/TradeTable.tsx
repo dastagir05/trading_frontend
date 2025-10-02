@@ -1,6 +1,5 @@
 import React from "react";
 import { useState, useEffect, JSX } from "react";
-import { User } from "../../types/user";
 import { Trade } from "@/types/trade";
 import { useSession } from "next-auth/react";
 import axios from "axios";
@@ -9,27 +8,22 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
-  Filter,
   Search,
   ArrowUpRight,
   ArrowDownRight,
-  IndianRupee,
   Building2,
-  Factory,
   Landmark,
   Cpu,
   Car,
   Fuel,
   Pill,
   Smartphone,
-  Wifi,
   Home,
   ShoppingCart,
   Briefcase,
   Eye,
   TrendingUp,
   TrendingDown,
-  MoreVertical,
 } from "lucide-react";
 import TradeCard from "./TradeCard";
 
@@ -38,8 +32,6 @@ interface LtpItem {
   instrument_key: string;
   last_price: number;
 }
-
-const ltpData: LtpItem[] = [];
 
 // Helper function to get company icon
 const getCompanyIcon = (symbol: string) => {
@@ -120,8 +112,7 @@ const TradeTable = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedTrade, setSelectedTrade] = useState<Trade>();
   const [ltpData, setLtpData] = useState<LtpItem[] | LtpItem>([]);
-  const [showFilters, setShowFilters] = useState(false);
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
 
   useEffect(() => {
     if (!session?.user?._id) return;

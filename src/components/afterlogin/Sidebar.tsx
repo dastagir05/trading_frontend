@@ -10,8 +10,6 @@ import {
   Activity,
   Settings,
   User,
-  Database,
-  Sparkles,
   BarChart2,
   Shield,
   Menu,

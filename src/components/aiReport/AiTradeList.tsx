@@ -14,10 +14,6 @@ import {
   CheckCircle,
   XCircle,
   AlertTriangle,
-  Calendar,
-  DollarSign,
-  Target,
-  Shield,
   ChevronRight,
 } from "lucide-react";
 import AiTradeCard from "./AiTradeCard";
@@ -110,7 +106,7 @@ const AiTradeList: React.FC = () => {
   };
 
   const filterAndSortTrades = () => {
-    let filtered = trades.filter((trade) => {
+    const filtered = trades.filter((trade) => {
       const matchesSearch =
         trade.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         trade.setup.symbol.toLowerCase().includes(searchTerm.toLowerCase());
@@ -125,35 +121,34 @@ const AiTradeList: React.FC = () => {
     });
 
     filtered.sort((a, b) => {
-      let aValue: any, bValue: any;
+      let comparison = 0;
 
       switch (sortBy) {
         case "createdAt":
-          aValue = new Date(a.createdAt);
-          bValue = new Date(b.createdAt);
+          comparison =
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
           break;
         case "confidence":
-          aValue = a.confidence;
-          bValue = b.confidence;
+          comparison = (a.confidence ?? 0) - (b.confidence ?? 0);
           break;
         case "pnl":
-          aValue = a.pnl || 0;
-          bValue = b.pnl || 0;
+          comparison = (a.pnl ?? 0) - (b.pnl ?? 0);
           break;
         case "title":
-          aValue = a.title;
-          bValue = b.title;
+          comparison = a.title.localeCompare(b.title);
           break;
-        default:
-          aValue = a[sortBy as keyof AiTrade];
-          bValue = b[sortBy as keyof AiTrade];
+        default: {
+          const aVal = a[sortBy as keyof AiTrade];
+          const bVal = b[sortBy as keyof AiTrade];
+          if (typeof aVal === "string" && typeof bVal === "string") {
+            comparison = aVal.localeCompare(bVal);
+          } else if (typeof aVal === "number" && typeof bVal === "number") {
+            comparison = aVal - bVal;
+          }
+        }
       }
 
-      if (sortOrder === "asc") {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
-      }
+      return sortOrder === "asc" ? comparison : -comparison;
     });
 
     setFilteredTrades(filtered);
