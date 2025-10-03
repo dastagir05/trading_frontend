@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-export async function GET({ params }: { params: { id: string } }) {
+export async function GET(
+  request: NextRequest,
+  context: { params: { id: string } }
+) {
+  const { id } = context.params;
   try {
-    const response = await fetch(`${BACKEND_URL}/api/ai-trades/${params.id}`, {
+    const response = await fetch(`${BACKEND_URL}/api/ai-trades/${id}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
