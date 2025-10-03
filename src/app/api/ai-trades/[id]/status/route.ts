@@ -7,16 +7,13 @@ export async function PATCH(request: NextRequest, context) {
     const { id } = (context as { params: { id: string } }).params;
     const body = await request.json();
 
-    const response = await fetch(
-      `${BACKEND_URL}/api/ai-trades/${params.id}/status`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
-      }
-    );
+    const response = await fetch(`${BACKEND_URL}/api/ai-trades/${id}/status`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
 
     if (!response.ok) {
       throw new Error(`Backend responded with status: ${response.status}`);
