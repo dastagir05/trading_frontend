@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
-interface RouteContext {
-  params: { id: string };
-}
-export async function POST(request: NextRequest, context: RouteContext) {
-  try {
-    const { id } = context.params;
+
+export async function POST(request: NextRequest, context) {
+  // Type it *inside* the function
+  const { id } = (context as { params: { id: string } }).params;
+
     const body = await request.json();
 
     const response = await fetch(`${BACKEND_URL}/api/ai-trades/${id}/notes`, {
