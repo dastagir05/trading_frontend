@@ -350,7 +350,7 @@ const Chart = () => {
               </button>
               <button
                 onClick={() => setShowMobileMenu(!showMobileMenu)}
-                className="p-2 bg-gray-100 rounded-lg"
+                className="p-2 bg-gray-100 text-black rounded-lg"
               >
                 {showMobileMenu ? (
                   <X className="w-5 h-5" />
@@ -362,7 +362,7 @@ const Chart = () => {
 
             {/* Mobile Menu Dropdown */}
             {showMobileMenu && (
-              <div className="md:hidden space-y-3 mb-3 pb-3 border-b border-gray-200">
+              <div className="md:hidden text-black space-y-3 mb-3 pb-3 border-b border-gray-200">
                 <div className="relative">
                   <select
                     className="w-full bg-white border-2 border-gray-200 px-3 py-2 rounded-lg text-sm"
@@ -386,7 +386,7 @@ const Chart = () => {
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                  {/* <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" /> */}
                 </div>
 
                 <div className="relative">
@@ -403,7 +403,7 @@ const Chart = () => {
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                  {/* <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" /> */}
                 </div>
 
                 <div className="flex gap-2">

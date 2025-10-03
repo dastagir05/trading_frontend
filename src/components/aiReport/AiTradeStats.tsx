@@ -182,7 +182,7 @@ const AiTradeStats: React.FC<AiTradeStatsProps> = ({ stats }) => {
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Average Confidence</span>
               <span className="font-semibold text-gray-900">
-                {stats.avgConfidence}%
+                {stats.avgConfidence.toFixed(2)}%
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
@@ -195,7 +195,7 @@ const AiTradeStats: React.FC<AiTradeStatsProps> = ({ stats }) => {
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Success Rate</span>
               <span className="font-semibold text-gray-900">
-                {stats.winRate * 100}%
+                {(stats.winRate * 100).toFixed(2)}%
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
@@ -219,7 +219,7 @@ const AiTradeStats: React.FC<AiTradeStatsProps> = ({ stats }) => {
                   stats.totalPnL >= 0 ? "text-green-600" : "text-red-600"
                 }`}
               >
-                ₹{stats.totalPnL}
+                ₹{stats.totalPnL.toFixed(2)}
               </span>
             </div>
 

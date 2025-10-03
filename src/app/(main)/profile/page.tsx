@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import Profile from "@/components/myProfile/Profile";
 
 export default function MyTrades() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
 
   useEffect(() => {
