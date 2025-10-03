@@ -66,7 +66,7 @@ export async function GET(
     });
 
     const candles1: Candle[][] = (await yesterdayres.data?.data?.candles) ?? [];
-    const candles: any[][] = (await response.data?.data?.candles) ?? [];
+    const candles: Candle[][] = (await response.data?.data?.candles) ?? [];
 
     console.log(`✅ Showing last ${candles.length} candles:\n`);
     const length = candles.length;
