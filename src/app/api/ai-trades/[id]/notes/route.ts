@@ -6,8 +6,8 @@ export async function POST(request: NextRequest, context) {
   // Type it *inside* the function
   const { id } = (context as { params: { id: string } }).params;
 
-    const body = await request.json();
-
+  const body = await request.json();
+  try {
     const response = await fetch(`${BACKEND_URL}/api/ai-trades/${id}/notes`, {
       method: "POST",
       headers: {
