@@ -29,14 +29,13 @@ export async function GET(request: NextRequest, context) {
   }
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(request: NextRequest, context) {
   try {
+    const { id } = (context as { params: { id: string } }).params;
+
     const body = await request.json();
 
-    const response = await fetch(`${BACKEND_URL}/api/ai-trades/${params.id}`, {
+    const response = await fetch(`${BACKEND_URL}/api/ai-trades/${id}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
