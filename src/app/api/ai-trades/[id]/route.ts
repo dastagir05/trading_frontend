@@ -2,11 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-export async function GET(
-  request: NextRequest,
-  context: { params: { id: string } }
-) {
-  const { id } = context.params;
+export async function GET(request: NextRequest, context) {
+  const { id } = (context as { params: { id: string } }).params;
   try {
     const response = await fetch(`${BACKEND_URL}/api/ai-trades/${id}`, {
       method: "GET",
@@ -16,7 +13,9 @@ export async function GET(
     });
 
     if (!response.ok) {
-      throw new Error(`Backend responded with status: ${response.status}`);
+      throw new Error(
+        `Backend responded with status: ${response.status}, ${request.url}`
+      );
     }
 
     const data = await response.json();
